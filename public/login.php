@@ -11,7 +11,7 @@ $password = (isset($_POST['password'])) ? $_POST['password'] : '';
 
 $pass = md5($password); // encripto la clave enviada por el usuario para compararla con la clave encriptada
 
-$consulta = "SELECT * FROM usuarios WHERE usuario='$usuario AND password='$pass' AND Rol='Administrador' "
+$consulta = "SELECT * FROM usuarios WHERE usuario='$usuario' AND password='$pass' AND Rol='Administrador'";
 $resultado = $conexion->prepare($consulta);
 $resultado->execute();
 
