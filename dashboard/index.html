@@ -23,7 +23,7 @@
             <!-- Navbar-->
             <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4">
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-user fa-fw"></i></a>
+                    <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"><?php echo $nombre; ?><i class="fas fa-user fa-fw"></i></a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
                         <li><a class="dropdown-item" href="#!">Ajustes</a></li>
                         <li><a class="dropdown-item" href="#!">Actividad de inicio</a></li>
@@ -43,7 +43,17 @@
                                 <div class="sb-nav-link-icon"><i class="fa-solid fa-car" style="color: #072e72;"></i></div>
                                 Centro de Control
                             </a>
+                            <a class="nav-link" href="index.html">
+                                <div class="sb-nav-link-icon"><i class="fa-solid fa-car" style="color: #072e72;"></i></div>
+                                Contrl de Citas
+                            </a>
                             <div class="sb-sidenav-menu-heading">Modulos</div>
+                            <a class="nav-link" href="ventas.php">
+                                <div class="sb-nav-link-icon">
+                                    <i class="fa-solid fa-car-on" style="color: #072e72;"></i></i>
+                                </div>
+                                Ventas
+                            </a>
                             <a class="nav-link" href="servicios.php">
                                 <div class="sb-nav-link-icon">
                                     <i class="fa-solid fa-car-on" style="color: #072e72;"></i></i>

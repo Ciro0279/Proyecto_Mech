@@ -2,60 +2,82 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Importar Clientes</title>
 </head>
 <body>
 
 <?php
-header('Content-Type: text/html; charset=UTF-8');  
-require('config.php'); // Conexión con mechanix_db
+header('Content-Type: text/html; charset=UTF-8');
+require('config.php'); // Debe definir $con = mysqli_connect(...);
 
-$tipo       = $_FILES['dataCliente']['type'];
-$tamanio    = $_FILES['dataCliente']['size'];
-$archivotmp = $_FILES['dataCliente']['tmp_name'];
-$lineas     = file($archivotmp);
+if (isset($_FILES['dataCliente']) && $_FILES['dataCliente']['error'] === UPLOAD_ERR_OK) {
+    $archivo = $_FILES['dataCliente']['tmp_name'];
+    $lineas = file($archivo);
+    $i = 0;
+    $agregados = 0;
 
-$i = 0;
-$agregados = 0;
+    foreach ($lineas as $linea) {
+        $i++;
+        $linea = trim($linea);
+        if (empty($linea)) continue;
 
-foreach ($lineas as $linea) {
-    if ($i != 0) {
         $datos = explode(";", $linea);
+        if (count($datos) < 7) {
+            echo "<p style='color:red;'>Línea $i inválida: menos de 7 columnas.</p>";
+            continue;
+        }
 
-        $nombre     = isset($datos[0]) ? utf8_encode(trim($datos[0])) : '';
-        $apellido   = isset($datos[1]) ? utf8_encode(trim($datos[1])) : '';
-        $documento  = isset($datos[2]) ? utf8_encode(trim($datos[2])) : '';
-        $id_tipo_doc= isset($datos[3]) ? intval(trim($datos[3])) : 0;
-        $telefono   = isset($datos[4]) ? utf8_encode(trim($datos[4])) : '';
-        $correo     = isset($datos[5]) ? utf8_encode(trim($datos[5])) : '';
-        $direccion  = isset($datos[6]) ? utf8_encode(trim($datos[6])) : '';
+        // Escapar y limpiar datos
+        list($nombre, $apellido, $documento, $id_tipo_doc,
+             $telefono, $correo, $direccion) =
+            array_map(function($v) use ($con) {
+                return mysqli_real_escape_string($con, trim($v));
+            }, $datos);
 
-        if ($documento != '') {
-            $sqlInsert = "INSERT INTO clientes 
-                (nombre_cliente, apellido_cliente, documento_cliente, id_tipo_doc, telefono, correo, direccion) 
-                VALUES 
-                ('$nombre', '$apellido', '$documento', '$id_tipo_doc', '$telefono', '$correo', '$direccion')";
+        $id_tipo_doc = intval($id_tipo_doc);
+        if ($id_tipo_doc <= 0) {
+            echo "<p style='color:orange;'>Línea $i: id_tipo_doc no válido ($id_tipo_doc).</p>";
+            continue;
+        }
 
-            $query = mysqli_query($con, $sqlInsert);
-            if ($query) {
-                $agregados++;
-            } else {
-                echo "<p style='color:red;'>Error al insertar documento: $documento</p>";
-            }
+        // Verificar que exista el tipo de documento
+        $rt = mysqli_query($con,
+            "SELECT 1 FROM tipo_documento WHERE id_tipo_doc = $id_tipo_doc");
+        if (!$rt || mysqli_num_rows($rt) === 0) {
+            echo "<p style='color:orange;'>Línea $i: id_tipo_doc ($id_tipo_doc) no existe.</p>";
+            continue;
+        }
+
+        // Evitar duplicados por documento
+        $rc = mysqli_query($con,
+            "SELECT id_cliente FROM clientes WHERE documento_cliente = '$documento'");
+        if (mysqli_num_rows($rc) > 0) {
+            echo "<p style='color:gray;'>Línea $i: documento '$documento' ya existe. Omitido.</p>";
+            continue;
+        }
+
+        // Insertar en clientes
+        $sql = "INSERT INTO clientes
+            (nombre_cliente, apellido_cliente, documento_cliente,
+             id_tipo_doc, telefono, correo, direccion)
+         VALUES
+            ('$nombre', '$apellido', '$documento',
+             $id_tipo_doc, '$telefono', '$correo', '$direccion')";
+        if (mysqli_query($con, $sql)) {
+            $agregados++;
+        } else {
+            echo "<p style='color:red;'>Línea $i: error MySQL: "
+                . mysqli_error($con) . "</p>";
         }
     }
 
-    $i++;
-}
+    echo "<hr><p>Total de clientes agregados: <strong>$agregados</strong></p>";
+    echo "<p><a href='index.php'>Volver</a></p>";
 
-echo "<center><p>Total de clientes agregados: <strong>$agregados</strong></p></center>";
-echo "<center><a href='index.php'>Volver</a></center>";
+} else {
+    echo "<p style='color:red;'>No se subió un archivo válido.</p>";
+}
 ?>
 
 </body>
 </html>
-
-
-
